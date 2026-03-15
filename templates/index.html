@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitaNexis Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+:root {
+--bg:#06111f;
+--panel:#0b1827;
+--panel-soft:#102338;
+--panel-strong:#081621;
+--border:rgba(90, 196, 255, 0.16);
+--border-strong:rgba(90, 196, 255, 0.26);
+--text:#eef7ff;
+--muted:#99b7cb;
+--primary:#2ee6d6;
+--secondary:#2b7fff;
+--danger:#ff8a88;
+--danger-soft:rgba(255, 97, 97, 0.12);
+--success-soft:rgba(46, 230, 214, 0.12);
+--shadow:0 26px 60px rgba(0, 0, 0, 0.34);
+}
+
+*{
+box-sizing:border-box;
+}
+
+html, body{
+margin:0;
+min-height:100%;
+font-family:"Segoe UI","Noto Sans",sans-serif;
+background:
+radial-gradient(circle at top left,rgba(43,127,255,0.16),transparent 24%),
+radial-gradient(circle at bottom left,rgba(46,230,214,0.13),transparent 30%),
+linear-gradient(135deg,#04101c,#081728 45%,#0a1f33 100%);
+color:var(--text);
+}
+
+body{
+padding:0;
+}
+
+.app-shell{
+display:flex;
+min-height:100vh;
+}
+
+.sidebar{
+width:268px;
+background:linear-gradient(180deg,#07131f,#0a1826 52%,#08111d 100%);
+border-right:1px solid var(--border);
+box-shadow:var(--shadow);
+display:flex;
+flex-direction:column;
+position:sticky;
+top:0;
+height:100vh;
+z-index:20;
+}
+
+.sidebar-header{
+padding:24px 20px 18px;
+border-bottom:1px solid var(--border);
+}
+
+.brand{
+display:flex;
+align-items:center;
+gap:14px;
+}
+
+.brand-logo{
+width:56px;
+height:56px;
+border-radius:16px;
+object-fit:cover;
+object-position:center 28%;
+box-shadow:0 0 26px rgba(46,230,214,0.22);
+}
+
+.brand-copy h1{
+margin:0;
+font-size:1.55rem;
+line-height:1.1;
+}
+
+.brand-copy p{
+margin:4px 0 0;
+font-size:0.88rem;
+color:var(--muted);
+}
+
+.sidebar-section{
+padding:18px 16px;
+display:grid;
+gap:10px;
+}
+
+.sidebar-label{
+padding:0 8px;
+font-size:0.76rem;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#7fd9ff;
+}
+
+.nav-link{
+border:none;
+width:100%;
+padding:14px 16px;
+border-radius:18px;
+display:flex;
+align-items:center;
+gap:12px;
+background:transparent;
+color:var(--muted);
+cursor:pointer;
+text-align:left;
+font-size:0.96rem;
+font-weight:600;
+transition:0.2s ease;
+}
+
+.nav-link:hover{
+background:rgba(255,255,255,0.04);
+color:var(--text);
+}
+
+.nav-link.active{
+background:linear-gradient(135deg,var(--secondary),var(--primary));
+color:#03131d;
+box-shadow:0 14px 32px rgba(43,127,255,0.26);
+}
+
+.nav-icon{
+width:34px;
+height:34px;
+border-radius:12px;
+display:grid;
+place-items:center;
+background:rgba(255,255,255,0.06);
+flex-shrink:0;
+overflow:hidden;
+}
+
+.nav-link.active .nav-icon{
+background:rgba(3,19,29,0.12);
+}
+
+.nav-icon img{
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:12px;
+}
+
+.sidebar-footer{
+margin-top:auto;
+padding:16px;
+border-top:1px solid var(--border);
+display:grid;
+gap:12px;
+}
+
+.sidebar-card{
+padding:14px;
+border-radius:18px;
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(90, 196, 255, 0.12);
+}
+
+.sidebar-card strong{
+display:block;
+margin-bottom:6px;
+}
+
+.sidebar-card p{
+margin:0;
+color:var(--muted);
+line-height:1.55;
+font-size:0.9rem;
+}
+
+.logout-link{
+display:inline-flex;
+justify-content:center;
+align-items:center;
+padding:13px 14px;
+border-radius:16px;
+text-decoration:none;
+color:var(--text);
+font-weight:700;
+border:1px solid var(--border);
+background:rgba(255,255,255,0.03);
+}
+
+.content-shell{
+flex:1;
+padding:28px;
+display:grid;
+gap:22px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:16px;
+padding:22px 24px;
+border:1px solid var(--border-strong);
+border-radius:26px;
+background:
+linear-gradient(135deg,rgba(9,22,37,0.9),rgba(6,16,28,0.92)),
+radial-gradient(circle at top right,rgba(46,230,214,0.08),transparent 36%);
+box-shadow:var(--shadow);
+}
+
+.topbar h2{
+margin:0;
+font-size:1.7rem;
+}
+
+.topbar p{
+margin:6px 0 0;
+color:var(--muted);
+}
+
+.topbar-badge{
+padding:10px 14px;
+border-radius:999px;
+border:1px solid rgba(46,230,214,0.24);
+color:var(--primary);
+background:rgba(255,255,255,0.03);
+font-weight:700;
+font-size:0.85rem;
+}
+
+.tab-panel{
+display:none;
+gap:22px;
+}
+
+.tab-panel.active{
+display:grid;
+}
+
+.hero-grid{
+display:grid;
+grid-template-columns:1.35fr 1fr;
+gap:22px;
+}
+
+.panel{
+border:1px solid var(--border);
+border-radius:28px;
+background:
+linear-gradient(180deg,rgba(11,24,39,0.96),rgba(8,18,31,0.96)),
+radial-gradient(circle at top right,rgba(43,127,255,0.08),transparent 34%);
+box-shadow:var(--shadow);
+overflow:hidden;
+}
+
+.panel-body{
+padding:24px;
+}
+
+.panel-title{
+margin:0;
+font-size:1.4rem;
+}
+
+.panel-copy{
+margin:8px 0 0;
+color:var(--muted);
+line-height:1.65;
+}
+
+.hero-card{
+padding:28px;
+display:grid;
+gap:18px;
+min-height:260px;
+align-content:start;
+}
+
+.hero-kicker{
+display:inline-flex;
+width:max-content;
+padding:8px 12px;
+border-radius:999px;
+background:rgba(46,230,214,0.1);
+color:var(--primary);
+font-size:0.8rem;
+font-weight:700;
+letter-spacing:0.06em;
+text-transform:uppercase;
+}
+
+.hero-card h3{
+margin:0;
+font-size:2.25rem;
+line-height:1.12;
+max-width:12ch;
+}
+
+.hero-card p{
+margin:0;
+max-width:64ch;
+color:var(--muted);
+line-height:1.75;
+}
+
+.hero-actions{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+}
+
+.button,
+.ghost-button{
+border:none;
+border-radius:18px;
+padding:14px 16px;
+font-size:0.95rem;
+font-weight:700;
+cursor:pointer;
+text-decoration:none;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+}
+
+.button{
+background:linear-gradient(135deg,var(--primary),#74ffe1 60%,#b7fff0);
+color:#03131d;
+}
+
+.ghost-button{
+background:rgba(255,255,255,0.04);
+color:var(--text);
+border:1px solid var(--border);
+}
+
+.metrics{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:14px;
+}
+
+.metric-card{
+padding:18px;
+border-radius:22px;
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(90, 196, 255, 0.12);
+}
+
+.metric-card strong{
+display:block;
+font-size:1.55rem;
+margin-bottom:6px;
+}
+
+.metric-card span{
+color:var(--muted);
+font-size:0.92rem;
+line-height:1.55;
+}
+
+.feature-grid{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:18px;
+}
+
+.feature-card{
+padding:20px;
+border-radius:24px;
+background:
+linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03)),
+radial-gradient(circle at top right,rgba(46,230,214,0.08),transparent 34%);
+border:1px solid rgba(90, 196, 255, 0.12);
+display:grid;
+gap:14px;
+}
+
+.feature-media{
+width:100%;
+height:140px;
+object-fit:cover;
+border-radius:18px;
+border:1px solid rgba(90, 196, 255, 0.12);
+}
+
+.feature-card h3{
+margin:0;
+font-size:1.08rem;
+}
+
+.feature-card p{
+margin:0;
+color:var(--muted);
+line-height:1.55;
+}
+
+.feature-card button{
+border:none;
+border-radius:16px;
+padding:13px 14px;
+background:linear-gradient(135deg,var(--secondary),#57a5ff);
+color:#fff;
+font-weight:700;
+cursor:pointer;
+}
+
+.two-column{
+display:grid;
+grid-template-columns:360px minmax(0,1fr);
+gap:22px;
+align-items:start;
+}
+
+.stack{
+display:grid;
+gap:18px;
+}
+
+.status-box,
+.emergency-box,
+.tool-form,
+.analysis-box,
+.record-item,
+.report-card,
+.reminder-card,
+.insight-card,
+.planner-card{
+padding:16px;
+border-radius:22px;
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(90, 196, 255, 0.1);
+}
+
+.section-label{
+font-size:0.8rem;
+font-weight:700;
+letter-spacing:0.08em;
+text-transform:uppercase;
+color:#80cfff;
+}
+
+.hospital-list{
+display:grid;
+gap:10px;
+}
+
+.hospital-link{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:12px;
+padding:15px;
+border-radius:18px;
+text-decoration:none;
+background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.04));
+color:var(--text);
+border:1px solid rgba(90, 196, 255, 0.1);
+}
+
+.hospital-link strong,
+.hospital-link span{
+display:block;
+}
+
+.hospital-link small{
+color:var(--muted);
+}
+
+.empty-list{
+padding:14px;
+border-radius:18px;
+background:rgba(255,255,255,0.05);
+color:var(--muted);
+}
+
+.map-panel{
+display:grid;
+grid-template-rows:auto 1fr;
+min-height:520px;
+}
+
+.map-header{
+padding:20px 22px;
+border-bottom:1px solid rgba(90, 196, 255, 0.1);
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+}
+
+.map-header h3{
+margin:0;
+font-size:1.06rem;
+}
+
+.map-header p{
+margin:5px 0 0;
+color:var(--muted);
+}
+
+.map{
+height:100%;
+min-height:360px;
+}
+
+.chat-layout{
+display:grid;
+grid-template-columns:minmax(0,1.05fr) minmax(320px,0.95fr);
+gap:22px;
+align-items:start;
+}
+
+.chat-shell{
+padding:24px;
+display:grid;
+gap:16px;
+}
+
+#chat-messages{
+height:430px;
+overflow:auto;
+padding:16px;
+border-radius:20px;
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(90, 196, 255, 0.1);
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.message{
+max-width:86%;
+padding:12px 14px;
+border-radius:18px;
+line-height:1.5;
+white-space:pre-wrap;
+overflow-wrap:anywhere;
+}
+
+.message.bot{
+align-self:flex-start;
+background:rgba(46,230,214,0.12);
+}
+
+.message.user{
+align-self:flex-end;
+background:rgba(43,127,255,0.16);
+}
+
+.chat-form,
+.records-form{
+display:flex;
+gap:12px;
+}
+
+.chat-form input,
+.records-form input,
+.tool-form input,
+.tool-form select,
+.tool-form textarea{
+width:100%;
+border:1px solid rgba(90, 196, 255, 0.14);
+border-radius:16px;
+padding:14px 15px;
+background:rgba(255,255,255,0.04);
+color:var(--text);
+font-size:0.98rem;
+font-family:inherit;
+}
+
+.tool-form select option{
+background:#0b1827;
+color:#eef7ff;
+}
+
+.chat-form button,
+.records-form button,
+.tool-form button,
+.upload-row button,
+.reminder-card button{
+border:none;
+border-radius:16px;
+padding:14px 16px;
+font-weight:700;
+cursor:pointer;
+}
+
+.chat-form button,
+.tool-form button{
+background:linear-gradient(135deg,var(--primary),#74ffe1 60%,#b7fff0);
+color:#03131d;
+}
+
+.records-form button,
+.upload-row button{
+background:linear-gradient(135deg,var(--secondary),#57a5ff);
+color:#fff;
+}
+
+.reminder-card button{
+padding:10px 12px;
+background:rgba(255,255,255,0.06);
+color:var(--text);
+}
+
+.records-layout{
+display:grid;
+gap:16px;
+}
+
+.records-error,
+.tool-message{
+display:none;
+padding:12px 14px;
+border-radius:16px;
+font-weight:700;
+}
+
+.records-error,
+.tool-message.error{
+background:var(--danger-soft);
+color:var(--danger);
+}
+
+.tool-message{
+background:var(--success-soft);
+color:var(--text);
+}
+
+.records-error.visible,
+.tool-message.visible{
+display:block;
+}
+
+.report-upload{
+display:grid;
+gap:12px;
+}
+
+.upload-row{
+display:flex;
+gap:12px;
+align-items:center;
+flex-wrap:wrap;
+}
+
+.upload-row input[type="file"]{
+flex:1;
+min-width:220px;
+padding:12px;
+border:1px dashed rgba(90, 196, 255, 0.18);
+border-radius:18px;
+background:rgba(255,255,255,0.03);
+color:var(--muted);
+}
+
+.save-toggle{
+display:flex;
+align-items:center;
+gap:8px;
+color:var(--muted);
+font-size:0.94rem;
+}
+
+.save-toggle input{
+accent-color:var(--primary);
+}
+
+.analysis-box{
+display:none;
+gap:14px;
+}
+
+.analysis-box.visible{
+display:grid;
+}
+
+.records-grid,
+.tool-grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:12px;
+}
+
+.record-item strong,
+.report-card strong,
+.reminder-card strong{
+display:block;
+margin-bottom:6px;
+}
+
+.record-item span,
+.report-card p,
+.reminder-card p,
+.insight-card p,
+.planner-card p{
+margin:0;
+color:var(--muted);
+line-height:1.6;
+}
+
+.report-list,
+.reminder-list{
+display:grid;
+gap:12px;
+}
+
+.reminder-card{
+display:flex;
+justify-content:space-between;
+gap:14px;
+align-items:flex-start;
+}
+
+.marker-grid{
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+gap:10px;
+}
+
+.marker-card{
+padding:12px;
+border-radius:16px;
+background:rgba(255,255,255,0.04);
+border:1px solid rgba(90, 196, 255, 0.1);
+}
+
+.marker-card strong{
+display:block;
+margin-bottom:6px;
+}
+
+.marker-card span{
+color:var(--muted);
+}
+
+.score-grid{
+display:grid;
+grid-template-columns:220px 1fr;
+gap:14px;
+align-items:start;
+}
+
+.score-ring{
+display:grid;
+place-items:center;
+min-height:220px;
+border-radius:26px;
+background:linear-gradient(135deg,rgba(46,230,214,0.16),rgba(43,127,255,0.16));
+border:1px solid rgba(90, 196, 255, 0.12);
+}
+
+.score-ring strong{
+font-size:3rem;
+display:block;
+}
+
+.score-ring span{
+color:var(--muted);
+}
+
+.planner-result{
+white-space:pre-wrap;
+}
+
+.field-group{
+display:none;
+}
+
+.field-group.visible{
+display:block;
+}
+
+@media (max-width: 1180px){
+.sidebar{
+width:224px;
+}
+
+.hero-grid,
+.feature-grid,
+.two-column,
+.chat-layout{
+grid-template-columns:1fr;
+}
+}
+
+@media (max-width: 920px){
+.app-shell{
+display:block;
+}
+
+.sidebar{
+position:relative;
+width:100%;
+height:auto;
+}
+
+.content-shell{
+padding:18px;
+}
+}
+
+@media (max-width: 720px){
+.topbar{
+padding:18px;
+}
+
+.feature-grid,
+.metrics,
+.records-grid,
+.tool-grid,
+.marker-grid,
+.score-grid{
+grid-template-columns:1fr;
+}
+
+.chat-form,
+.records-form,
+.upload-row{
+flex-direction:column;
+}
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+<div class="sidebar-header">
+<div class="brand">
+<img class="brand-logo" src="{{ url_for('template_asset', filename='VitaNexis.png') }}" alt="VitaNexis logo">
+<div class="brand-copy">
+<h1>VitaNexis</h1>
+<p>Empowering connected well-being</p>
+</div>
+</div>
+</div>
+
+<div class="sidebar-section">
+<div class="sidebar-label">Navigation</div>
+<button class="nav-link active" data-tab="dashboard"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='VitaNexis.png') }}" alt="Dashboard"></span><span>Dashboard</span></button>
+<button class="nav-link" data-tab="hospitals"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='hospital finder.png') }}" alt="Hospitals"></span><span>Nearest Hospitals</span></button>
+<button class="nav-link" data-tab="chatbot"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='Chatbot.png') }}" alt="Chatbot"></span><span>AI Chatbot</span></button>
+<button class="nav-link" data-tab="analyzer"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='blood_report.png') }}" alt="Blood Analyzer"></span><span>Blood Analyzer</span></button>
+<button class="nav-link" data-tab="reminders"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='Medicine reminder.png') }}" alt="Medicine Reminder"></span><span>Medicine Reminder</span></button>
+<button class="nav-link" data-tab="health"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='HealthScore.png') }}" alt="Health Risk"></span><span>Health Risk</span></button>
+<button class="nav-link" data-tab="diet"><span class="nav-icon"><img src="{{ url_for('template_asset', filename='Diet planner.png') }}" alt="Diet Planner"></span><span>Diet Planner</span></button>
+</div>
+
+<div class="sidebar-footer">
+<div class="sidebar-card">
+<strong>{{ user_name }}</strong>
+<p>Connected care dashboard with chatbot, reports, reminders, and hospital search.</p>
+</div>
+<a class="logout-link" href="{{ url_for('auth.logout') }}">Logout</a>
+</div>
+</aside>
+
+<main class="content-shell">
+<header class="topbar">
+<div>
+<h2 id="topbar-title">Dashboard</h2>
+<p id="topbar-copy">Overview of all VitaNexis services.</p>
+</div>
+<div class="topbar-badge">Connected Care Workspace</div>
+</header>
+
+<section class="tab-panel active" data-panel="dashboard">
+<div class="hero-grid">
+<article class="panel hero-card">
+<span class="hero-kicker">Health Assistant</span>
+<h3>Healthcare tools in one connected workspace.</h3>
+<p>Open the chatbot, find nearby hospitals, analyze blood reports, and review health insights from a single dashboard.</p>
+<div class="hero-actions">
+<button class="button" type="button" data-open-tab="chatbot">Open Chatbot</button>
+<button class="ghost-button" type="button" data-open-tab="hospitals">View Hospitals</button>
+</div>
+</article>
+
+<article class="panel panel-body">
+<h3 class="panel-title">Quick Overview</h3>
+<p class="panel-copy">The sidebar now opens each service directly, matching the Figma app structure.</p>
+<div class="metrics">
+<div class="metric-card"><strong>7</strong><span>Integrated healthcare tools in the current dashboard shell.</span></div>
+<div class="metric-card"><strong>8</strong><span>Closest hospitals shown after location permission is granted.</span></div>
+<div class="metric-card"><strong>AI</strong><span>Shared assistant for symptom support, health Q&A, and report interpretation.</span></div>
+<div class="metric-card"><strong>Secure</strong><span>User records remain behind authenticated routes and password confirmation.</span></div>
+</div>
+</article>
+</div>
+
+<div class="feature-grid">
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='Chatbot.png') }}" alt="Chatbot module">
+<h3>AI Chatbot Assistant</h3>
+<p>Symptom support, follow-up questions, and general health guidance.</p>
+<button type="button" data-open-tab="chatbot">Open Chatbot</button>
+</article>
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='blood_report.png') }}" alt="Blood report analyzer">
+<h3>Blood Report Analyzer</h3>
+<p>Upload a report, analyze findings, and review stored medical records.</p>
+<button type="button" data-open-tab="analyzer">Open Analyzer</button>
+</article>
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='hospital finder.png') }}" alt="Hospital finder">
+<h3>Nearest Hospitals</h3>
+<p>Allow device location to load the nearest hospitals and show them on the map.</p>
+<button type="button" data-open-tab="hospitals">Open Hospitals</button>
+</article>
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='Medicine reminder.png') }}" alt="Medicine reminder">
+<h3>Medicine Reminder</h3>
+<p>Store medicine name, dosage, and time with browser notifications.</p>
+<button type="button" data-open-tab="reminders">Open Reminders</button>
+</article>
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='HealthScore.png') }}" alt="Health score">
+<h3>Health Risk Prediction</h3>
+<p>Generate a health score using stored profile data and available reports first.</p>
+<button type="button" data-open-tab="health">Open Health Risk</button>
+</article>
+<article class="feature-card panel">
+<img class="feature-media" src="{{ url_for('template_asset', filename='Diet planner.png') }}" alt="Diet planner">
+<h3>AI Diet Planner</h3>
+<p>Build a weekly diet plan using allergies, conditions, and diet preference.</p>
+<button type="button" data-open-tab="diet">Open Diet Planner</button>
+</article>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="hospitals">
+<div class="two-column">
+<aside class="stack">
+<article class="panel panel-body">
+<div class="section-label">Live Hospital Feed</div>
+<h3 class="panel-title">Nearby care options</h3>
+<p class="panel-copy">The map is available even without location. Hospitals and distances load after permission is granted.</p>
+<div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+<button class="button" id="allow-location-button" type="button">Use Device Location</button>
+<button class="ghost-button" id="refresh-hospitals-button" type="button">Refresh Hospitals</button>
+</div>
+</article>
+<div class="status-box" id="location-status">Waiting for location permission. Nearby hospitals will appear after access is granted.</div>
+<article class="panel panel-body">
+<div class="section-label">Nearest Hospitals</div>
+<div class="hospital-list" id="hospital-list">
+<div class="empty-list">No hospitals loaded yet. Allow location access to search nearby hospitals.</div>
+</div>
+</article>
+<div class="emergency-box">
+<div class="section-label">Emergency Contact</div>
+<p>Use the ambulance shortcut for immediate emergency assistance.</p>
+<a class="button" href="tel:108">Emergency Call</a>
+</div>
+</aside>
+
+<section class="panel map-panel">
+<div class="map-header">
+<div>
+<h3>Closest Hospitals Map</h3>
+<p id="hospital-map-status">Map is visible. Grant location permission to load nearby hospitals and distances.</p>
+</div>
+</div>
+<div id="hospital-map" class="map"></div>
+</section>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="chatbot">
+<div class="chat-layout">
+<section class="panel chat-shell">
+<div>
+<div class="section-label">AI Chatbot</div>
+<h3 class="panel-title">Chat with VitaNexis</h3>
+<p class="panel-copy">Describe symptoms or ask health-related questions. The assistant will ask targeted general examination questions when needed.</p>
+</div>
+<div id="chat-messages">
+<div class="message bot">Hello {{ user_name }}. Describe your symptoms or ask a health question whenever you are ready.</div>
+</div>
+<form class="chat-form" id="chat-form">
+<input id="user-input" type="text" placeholder="Describe symptoms or ask a health question..." autocomplete="off">
+<button id="send-button" type="submit">Send</button>
+</form>
+</section>
+
+<section class="panel map-panel">
+<div class="map-header">
+<div>
+<h3>Hospital Map</h3>
+<p id="chat-map-status">Map is available here during chat. Allow location on the hospitals tab to load nearby hospitals and distances.</p>
+</div>
+<button class="ghost-button" type="button" data-open-tab="hospitals">Open Hospitals Tab</button>
+</div>
+<div id="chat-map" class="map"></div>
+</section>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="analyzer">
+<div class="panel panel-body">
+<div class="records-layout">
+<div>
+<div class="section-label">Reports And Records</div>
+<h3 class="panel-title">Blood Report Analyzer</h3>
+<p class="panel-copy">Upload a blood report for analysis or re-enter your password to view stored medical details and saved reports.</p>
+</div>
+<div class="report-upload">
+<h4>Analyze Blood Report</h4>
+<div class="upload-row">
+<input id="report-file" type="file" accept=".pdf">
+<button id="analyze-report-button" type="button">Analyze Report</button>
+</div>
+<label class="save-toggle">
+<input id="save-report" type="checkbox" checked>
+Save this report to the database
+</label>
+</div>
+<div class="analysis-box" id="analysis-box">
+<div>
+<h4>Analysis Result</h4>
+<p id="analysis-text" class="panel-copy"></p>
+</div>
+<div>
+<h4>Detected Markers</h4>
+<div class="marker-grid" id="marker-grid"></div>
+</div>
+</div>
+<form class="records-form" id="records-form">
+<input id="records-password" type="password" placeholder="Re-enter password">
+<button type="submit">View Records</button>
+</form>
+<div class="records-error" id="records-error"></div>
+<div id="records-result"></div>
+</div>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="reminders">
+<div class="panel panel-body">
+<div class="records-layout">
+<div>
+<div class="section-label">Medicine Reminder</div>
+<h3 class="panel-title">Daily reminder setup</h3>
+<p class="panel-copy">Save medicine name, dosage, and time. Browser notifications will be used when permission is granted.</p>
+</div>
+<form class="tool-form" id="reminder-form">
+<div class="tool-grid">
+<input id="reminder-medicine" type="text" placeholder="Medicine name">
+<input id="reminder-dosage" type="text" placeholder="Dosage">
+</div>
+<div class="tool-grid">
+<input id="reminder-time" type="time">
+<input id="reminder-notes" type="text" placeholder="Notes (optional)">
+</div>
+<button type="submit">Save Reminder</button>
+</form>
+<div class="tool-message" id="reminder-message"></div>
+<div class="reminder-list" id="reminder-list"></div>
+</div>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="health">
+<div class="panel panel-body">
+<div class="records-layout">
+<div>
+<div class="section-label">Health Risk Prediction</div>
+<h3 class="panel-title">AI health score</h3>
+<p class="panel-copy">The score uses your saved profile and uploaded reports first. Extra questions appear only if key details are missing and no reports exist.</p>
+</div>
+<button class="button" id="load-health-button" type="button">Generate Health Score</button>
+<div class="tool-message" id="health-message"></div>
+<form class="tool-form" id="health-form" style="display:none;">
+<div class="tool-grid">
+<div class="field-group" id="field-health-age">
+<input id="health-age" type="number" min="0" placeholder="Age">
+</div>
+<div class="field-group" id="field-health-gender">
+<select id="health-gender">
+<option value="">Gender</option>
+<option value="Male">Male</option>
+<option value="Female">Female</option>
+<option value="Other">Other</option>
+</select>
+</div>
+</div>
+<div class="field-group" id="field-health-known-conditions">
+<input id="health-known-conditions" type="text" placeholder="Known conditions, e.g. diabetes">
+</div>
+<button type="submit">Generate With Additional Details</button>
+</form>
+<div id="health-result"></div>
+</div>
+</div>
+</section>
+
+<section class="tab-panel" data-panel="diet">
+<div class="panel panel-body">
+<div class="records-layout">
+<div>
+<div class="section-label">AI Diet Planner</div>
+<h3 class="panel-title">Weekly diet plan</h3>
+<p class="panel-copy">Build a weekly plan using allergies, medical conditions, diet preference, and restrictions.</p>
+</div>
+<form class="tool-form" id="diet-form">
+<div class="tool-grid">
+<select id="diet-preference">
+<option value="Vegetarian">Vegetarian</option>
+<option value="Non-Vegetarian">Non-Vegetarian</option>
+<option value="Vegan">Vegan</option>
+<option value="Eggetarian">Eggetarian</option>
+</select>
+<input id="diet-restrictions" type="text" placeholder="Dietary restrictions">
+</div>
+<button type="submit">Generate Weekly Diet Plan</button>
+</form>
+<div class="tool-message" id="diet-message"></div>
+<div id="diet-result"></div>
+</div>
+</div>
+</section>
+</main>
+</div>
+
+<script>
+const navLinks = Array.from(document.querySelectorAll(".nav-link"));
+const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+const topbarTitle = document.getElementById("topbar-title");
+const topbarCopy = document.getElementById("topbar-copy");
+
+const tabMeta = {
+dashboard: { title: "Dashboard", copy: "Overview of all VitaNexis services." },
+hospitals: { title: "Nearest Hospitals", copy: "Nearby hospital discovery with permission-based location search and map view." },
+chatbot: { title: "AI Chatbot Assistant", copy: "Chat with the VitaNexis assistant for symptoms, follow-up questions, and general health guidance." },
+analyzer: { title: "Blood Report Analyzer", copy: "Upload reports, interpret findings, and review secured records." },
+reminders: { title: "Medicine Reminder", copy: "Save reminders with dosage and timing, then trigger browser notifications." },
+health: { title: "Health Risk Prediction", copy: "Generate a health score using profile data and reports first." },
+diet: { title: "AI Diet Planner", copy: "Create a weekly diet plan using your profile, restrictions, and preferences." }
+};
+
+const allowLocationButton = document.getElementById("allow-location-button");
+const refreshHospitalsButton = document.getElementById("refresh-hospitals-button");
+const locationStatus = document.getElementById("location-status");
+const hospitalMapStatus = document.getElementById("hospital-map-status");
+const chatMapStatus = document.getElementById("chat-map-status");
+const hospitalList = document.getElementById("hospital-list");
+
+const chatMessages = document.getElementById("chat-messages");
+const chatForm = document.getElementById("chat-form");
+const userInput = document.getElementById("user-input");
+const sendButton = document.getElementById("send-button");
+
+const recordsForm = document.getElementById("records-form");
+const recordsPassword = document.getElementById("records-password");
+const recordsError = document.getElementById("records-error");
+const recordsResult = document.getElementById("records-result");
+const reportFile = document.getElementById("report-file");
+const analyzeReportButton = document.getElementById("analyze-report-button");
+const saveReport = document.getElementById("save-report");
+const analysisBox = document.getElementById("analysis-box");
+const analysisText = document.getElementById("analysis-text");
+const markerGrid = document.getElementById("marker-grid");
+
+const reminderForm = document.getElementById("reminder-form");
+const reminderMedicine = document.getElementById("reminder-medicine");
+const reminderDosage = document.getElementById("reminder-dosage");
+const reminderTime = document.getElementById("reminder-time");
+const reminderNotes = document.getElementById("reminder-notes");
+const reminderMessage = document.getElementById("reminder-message");
+const reminderList = document.getElementById("reminder-list");
+
+const loadHealthButton = document.getElementById("load-health-button");
+const healthMessage = document.getElementById("health-message");
+const healthResult = document.getElementById("health-result");
+const healthForm = document.getElementById("health-form");
+const healthAge = document.getElementById("health-age");
+const healthGender = document.getElementById("health-gender");
+const healthKnownConditions = document.getElementById("health-known-conditions");
+const healthAgeField = document.getElementById("field-health-age");
+const healthGenderField = document.getElementById("field-health-gender");
+const healthKnownConditionsField = document.getElementById("field-health-known-conditions");
+
+const dietForm = document.getElementById("diet-form");
+const dietPreference = document.getElementById("diet-preference");
+const dietRestrictions = document.getElementById("diet-restrictions");
+const dietMessage = document.getElementById("diet-message");
+const dietResult = document.getElementById("diet-result");
+
+let userLocation = null;
+let hospitalsCache = [];
+let reminderCache = [];
+
+const hospitalMap = L.map("hospital-map").setView([20.5937, 78.9629], 5);
+const chatMap = L.map("chat-map").setView([20.5937, 78.9629], 5);
+
+[hospitalMap, chatMap].forEach((mapInstance) => {
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+attribution: "OpenStreetMap"
+}).addTo(mapInstance);
+});
+
+let hospitalMapUserMarker = null;
+let chatMapUserMarker = null;
+let hospitalMapMarkers = [];
+let chatMapMarkers = [];
+
+function setActiveTab(tabName) {
+navLinks.forEach((link) => {
+link.classList.toggle("active", link.dataset.tab === tabName);
+});
+tabPanels.forEach((panel) => {
+panel.classList.toggle("active", panel.dataset.panel === tabName);
+});
+const meta = tabMeta[tabName] || tabMeta.dashboard;
+topbarTitle.textContent = meta.title;
+topbarCopy.textContent = meta.copy;
+window.location.hash = tabName;
+setTimeout(() => {
+hospitalMap.invalidateSize();
+chatMap.invalidateSize();
+}, 120);
+if (tabName === "reminders") {
+requestNotificationPermission();
+loadReminders().catch((error) => setToolMessage(reminderMessage, error.message, true));
+}
+}
+
+function addMessage(text, sender) {
+const div = document.createElement("div");
+div.className = `message ${sender}`;
+div.textContent = text;
+chatMessages.appendChild(div);
+div.scrollIntoView({ behavior: "smooth" });
+return div;
+}
+
+function setToolMessage(element, text, isError = false) {
+element.textContent = text;
+element.classList.add("visible");
+element.classList.toggle("error", isError);
+}
+
+function clearToolMessage(element) {
+element.textContent = "";
+element.classList.remove("visible", "error");
+}
+
+function setHealthFieldVisibility(missingFields) {
+const fieldMap = {
+age: healthAgeField,
+gender: healthGenderField,
+known_conditions: healthKnownConditionsField
+};
+Object.values(fieldMap).forEach((field) => field.classList.remove("visible"));
+(missingFields || []).forEach((fieldName) => {
+if (fieldMap[fieldName]) {
+fieldMap[fieldName].classList.add("visible");
+}
+});
+}
+
+function clearHospitalMarkers() {
+hospitalMapMarkers.forEach((marker) => hospitalMap.removeLayer(marker));
+chatMapMarkers.forEach((marker) => chatMap.removeLayer(marker));
+hospitalMapMarkers = [];
+chatMapMarkers = [];
+}
+
+function renderHospitalList(hospitals) {
+hospitalList.innerHTML = "";
+if (!hospitals.length) {
+hospitalList.innerHTML = '<div class="empty-list">No nearby hospitals were found.</div>';
+return;
+}
+hospitals.forEach((hospital) => {
+const link = document.createElement("a");
+const params = new URLSearchParams({
+name: hospital.name || "Hospital",
+speciality: hospital.speciality || "General",
+phone: hospital.phone || "N/A",
+distance_km: String(hospital.distance_km ?? "N/A"),
+lat: String(hospital.lat ?? ""),
+lon: String(hospital.lon ?? "")
+});
+link.className = "hospital-link";
+link.href = `/hospital/details?${params.toString()}`;
+link.innerHTML = `
+<div>
+<strong>${hospital.name || "Hospital"}</strong>
+<small>${hospital.speciality || "General"}</small>
+</div>
+<span>${hospital.distance_km ?? "?"} km</span>
+`;
+hospitalList.appendChild(link);
+});
+}
+
+function renderHospitalMarkers(hospitals) {
+clearHospitalMarkers();
+hospitals.forEach((hospital) => {
+const popupHtml = `
+<b>${hospital.name}</b><br>
+${hospital.speciality}<br>
+Phone: ${hospital.phone}<br>
+Distance: ${hospital.distance_km} km
+`;
+const hospitalMarker = L.marker([hospital.lat, hospital.lon]).addTo(hospitalMap);
+hospitalMarker.bindPopup(popupHtml);
+hospitalMapMarkers.push(hospitalMarker);
+const chatMarker = L.marker([hospital.lat, hospital.lon]).addTo(chatMap);
+chatMarker.bindPopup(popupHtml);
+chatMapMarkers.push(chatMarker);
+});
+}
+
+async function fetchHospitals() {
+if (!userLocation) {
+locationStatus.textContent = "Location permission is still required to search nearby hospitals.";
+hospitalMapStatus.textContent = "Map is visible. Grant location permission to load nearby hospitals.";
+chatMapStatus.textContent = "Map is visible. Grant location permission to load nearby hospitals.";
+return;
+}
+locationStatus.textContent = "Loading closest hospitals...";
+hospitalMapStatus.textContent = "Loading nearby hospitals on the map...";
+chatMapStatus.textContent = "Loading nearby hospitals on the map...";
+try {
+const res = await fetch(`/hospital/hospitals?lat=${userLocation.lat}&lon=${userLocation.lon}`);
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Hospital request failed.");
+}
+hospitalsCache = data.slice(0, 8);
+renderHospitalList(hospitalsCache);
+renderHospitalMarkers(hospitalsCache);
+locationStatus.textContent = `Showing ${hospitalsCache.length} hospitals near your location.`;
+hospitalMapStatus.textContent = "Nearby hospitals are loaded on the map.";
+chatMapStatus.textContent = "Nearby hospitals are loaded on the map.";
+} catch (error) {
+locationStatus.textContent = "Unable to load nearby hospitals right now.";
+hospitalMapStatus.textContent = "Unable to load nearby hospitals.";
+chatMapStatus.textContent = "Unable to load nearby hospitals.";
+hospitalList.innerHTML = `<div class="empty-list">${error.message}</div>`;
+}
+}
+
+function setUserLocation(lat, lon) {
+userLocation = { lat, lon };
+hospitalMap.setView([lat, lon], 12);
+chatMap.setView([lat, lon], 12);
+if (hospitalMapUserMarker) {
+hospitalMap.removeLayer(hospitalMapUserMarker);
+}
+if (chatMapUserMarker) {
+chatMap.removeLayer(chatMapUserMarker);
+}
+hospitalMapUserMarker = L.marker([lat, lon]).addTo(hospitalMap).bindPopup("You are here");
+chatMapUserMarker = L.marker([lat, lon]).addTo(chatMap).bindPopup("You are here");
+fetchHospitals();
+}
+
+function requestDeviceLocation() {
+if (!navigator.geolocation) {
+locationStatus.textContent = "This browser does not support location access.";
+hospitalMapStatus.textContent = "Map is available, but nearby hospital search needs location support.";
+chatMapStatus.textContent = "Map is available, but nearby hospital search needs location support.";
+return;
+}
+locationStatus.textContent = "Waiting for device location permission...";
+navigator.geolocation.getCurrentPosition(
+(position) => {
+setUserLocation(position.coords.latitude, position.coords.longitude);
+},
+() => {
+locationStatus.textContent = "Location permission denied. Hospitals will not be loaded until permission is granted.";
+hospitalMapStatus.textContent = "Map is still available without location.";
+chatMapStatus.textContent = "Map is still available without location.";
+},
+{ enableHighAccuracy: true, timeout: 10000 }
+);
+}
+
+async function sendMessage(message) {
+addMessage(message, "user");
+userInput.value = "";
+sendButton.disabled = true;
+const pending = addMessage("Thinking...", "bot");
+try {
+const res = await fetch("/chat", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+message,
+lat: userLocation ? userLocation.lat : null,
+lon: userLocation ? userLocation.lon : null
+})
+});
+const data = await res.json();
+pending.textContent = data.response || "No response generated.";
+} catch (error) {
+pending.textContent = "Error contacting server.";
+}
+if (userLocation && hospitalsCache.length === 0) {
+await fetchHospitals();
+}
+sendButton.disabled = false;
+userInput.focus();
+}
+
+function renderRecords(profile, reports) {
+const entries = Object.entries(profile).filter(([, value]) => value !== null && value !== "");
+const profileHtml = entries.length
+? entries.map(([key, value]) => `
+<div class="record-item">
+<strong>${key.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())}</strong>
+<span>${value}</span>
+</div>
+`).join("")
+: '<div class="record-item"><strong>No profile data</strong><span>No saved profile fields were found.</span></div>';
+const reportsHtml = reports.length
+? reports.map((report) => `
+<article class="report-card">
+<strong>${report.filename}</strong>
+<p>Saved on ${report.created_at}</p>
+<p>${report.analysis}</p>
+</article>
+`).join("")
+: '<article class="report-card"><strong>No blood reports</strong><p>No uploaded blood reports were found for this user yet.</p></article>';
+recordsResult.innerHTML = `
+<div class="records-grid">${profileHtml}</div>
+<div class="report-list">${reportsHtml}</div>
+`;
+}
+
+function renderReportAnalysis(analysis, markers) {
+analysisText.textContent = analysis || "No analysis returned.";
+markerGrid.innerHTML = "";
+const markerEntries = Object.entries(markers || {});
+if (!markerEntries.length) {
+markerGrid.innerHTML = '<div class="marker-card"><strong>No markers found</strong><span>No structured blood markers were detected in the uploaded file.</span></div>';
+} else {
+markerEntries.forEach(([key, value]) => {
+const card = document.createElement("div");
+card.className = "marker-card";
+card.innerHTML = `
+<strong>${key.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase())}</strong>
+<span>${value}</span>
+`;
+markerGrid.appendChild(card);
+});
+}
+analysisBox.classList.add("visible");
+}
+
+function renderReminders(reminders) {
+reminderCache = reminders;
+reminderList.innerHTML = "";
+if (!reminders.length) {
+reminderList.innerHTML = '<div class="planner-card"><p>No medicine reminders saved yet.</p></div>';
+return;
+}
+reminders.forEach((reminder) => {
+const card = document.createElement("div");
+card.className = "reminder-card";
+card.innerHTML = `
+<div>
+<strong>${reminder.medicine_name}</strong>
+<p>${reminder.dosage} at ${reminder.reminder_time}</p>
+<p>${reminder.notes || "Daily reminder"}</p>
+</div>
+<button type="button" data-reminder-id="${reminder.id}">Delete</button>
+`;
+reminderList.appendChild(card);
+});
+}
+
+async function loadReminders() {
+const res = await fetch("/wellness/reminders");
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to load reminders.");
+}
+renderReminders(data);
+}
+
+function requestNotificationPermission() {
+if (!("Notification" in window)) {
+return;
+}
+if (Notification.permission === "default") {
+Notification.requestPermission();
+}
+}
+
+function maybeSendReminderNotifications() {
+if (!("Notification" in window) || Notification.permission !== "granted") {
+return;
+}
+const now = new Date();
+const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+const currentDayKey = now.toISOString().slice(0, 10);
+reminderCache.forEach((reminder) => {
+const notificationKey = `reminder-${reminder.id}-${currentDayKey}-${currentTime}`;
+if (reminder.reminder_time === currentTime && !localStorage.getItem(notificationKey)) {
+new Notification("VitaNexis Medicine Reminder", {
+body: `Take ${reminder.medicine_name}: ${reminder.dosage}`
+});
+localStorage.setItem(notificationKey, "sent");
+}
+});
+}
+
+document.querySelectorAll("[data-open-tab]").forEach((button) => {
+button.addEventListener("click", () => setActiveTab(button.dataset.openTab));
+});
+
+navLinks.forEach((link) => {
+link.addEventListener("click", () => setActiveTab(link.dataset.tab));
+});
+
+allowLocationButton.addEventListener("click", requestDeviceLocation);
+
+refreshHospitalsButton.addEventListener("click", async () => {
+if (userLocation) {
+await fetchHospitals();
+} else {
+hospitalMapStatus.textContent = "Map is visible. Allow location access to refresh nearby hospitals.";
+chatMapStatus.textContent = "Map is visible. Allow location access to refresh nearby hospitals.";
+}
+});
+
+chatForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+const message = userInput.value.trim();
+if (!message) {
+return;
+}
+await sendMessage(message);
+});
+
+recordsForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+recordsError.classList.remove("visible");
+recordsResult.innerHTML = "";
+try {
+const res = await fetch("/records", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ password: recordsPassword.value })
+});
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to load records.");
+}
+renderRecords(data.profile, data.reports);
+recordsPassword.value = "";
+} catch (error) {
+recordsError.textContent = error.message;
+recordsError.classList.add("visible");
+}
+});
+
+analyzeReportButton.addEventListener("click", async () => {
+recordsError.classList.remove("visible");
+if (!reportFile.files.length) {
+recordsError.textContent = "Select a PDF blood report first.";
+recordsError.classList.add("visible");
+return;
+}
+const formData = new FormData();
+formData.append("file", reportFile.files[0]);
+formData.append("save", saveReport.checked ? "true" : "false");
+const originalText = analyzeReportButton.textContent;
+analyzeReportButton.disabled = true;
+analyzeReportButton.textContent = "Analyzing...";
+try {
+const res = await fetch("/analyze-report", {
+method: "POST",
+body: formData
+});
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to analyze report.");
+}
+renderReportAnalysis(data.analysis, data.markers);
+reportFile.value = "";
+} catch (error) {
+recordsError.textContent = error.message;
+recordsError.classList.add("visible");
+} finally {
+analyzeReportButton.disabled = false;
+analyzeReportButton.textContent = originalText;
+}
+});
+
+reminderForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+clearToolMessage(reminderMessage);
+try {
+const res = await fetch("/wellness/reminders", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+medicine_name: reminderMedicine.value,
+dosage: reminderDosage.value,
+reminder_time: reminderTime.value,
+notes: reminderNotes.value
+})
+});
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to save reminder.");
+}
+setToolMessage(reminderMessage, "Reminder saved.");
+reminderForm.reset();
+requestNotificationPermission();
+await loadReminders();
+} catch (error) {
+setToolMessage(reminderMessage, error.message, true);
+}
+});
+
+reminderList.addEventListener("click", async (event) => {
+const target = event.target;
+if (!(target instanceof HTMLButtonElement)) {
+return;
+}
+const reminderId = target.dataset.reminderId;
+if (!reminderId) {
+return;
+}
+try {
+await fetch(`/wellness/reminders/${reminderId}`, { method: "DELETE" });
+await loadReminders();
+} catch (error) {
+setToolMessage(reminderMessage, "Unable to delete reminder.", true);
+}
+});
+
+loadHealthButton.addEventListener("click", async () => {
+clearToolMessage(healthMessage);
+healthResult.innerHTML = "";
+healthForm.style.display = "none";
+try {
+const res = await fetch("/wellness/health-insights");
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to generate health score.");
+}
+if (data.needs_more_info) {
+setHealthFieldVisibility(data.missing_fields);
+healthForm.style.display = "grid";
+setToolMessage(healthMessage, "A few additional profile details are needed because there are no saved reports and some key medical fields are missing.");
+return;
+}
+healthResult.innerHTML = `
+<div class="score-grid">
+<div class="score-ring">
+<div>
+<strong>${data.health_score}</strong>
+<span>Health Score</span>
+</div>
+</div>
+<div class="insight-card">
+<h3>${data.risk_level}</h3>
+<p>Confidence: ${data.confidence}</p>
+<p>${data.summary}</p>
+</div>
+</div>
+`;
+} catch (error) {
+setToolMessage(healthMessage, error.message, true);
+}
+});
+
+healthForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+clearToolMessage(healthMessage);
+healthResult.innerHTML = "";
+try {
+const res = await fetch("/wellness/health-insights", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+age: healthAge.value,
+gender: healthGender.value,
+known_conditions: healthKnownConditions.value
+})
+});
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to generate health score.");
+}
+healthResult.innerHTML = `
+<div class="score-grid">
+<div class="score-ring">
+<div>
+<strong>${data.health_score}</strong>
+<span>Health Score</span>
+</div>
+</div>
+<div class="insight-card">
+<h3>${data.risk_level}</h3>
+<p>Confidence: ${data.confidence}</p>
+<p>${data.summary}</p>
+</div>
+</div>
+`;
+healthForm.reset();
+healthForm.style.display = "none";
+} catch (error) {
+setToolMessage(healthMessage, error.message, true);
+}
+});
+
+dietForm.addEventListener("submit", async (event) => {
+event.preventDefault();
+clearToolMessage(dietMessage);
+dietResult.innerHTML = "";
+try {
+const res = await fetch("/wellness/diet-plan", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+diet_preference: dietPreference.value,
+dietary_restrictions: dietRestrictions.value
+})
+});
+const data = await res.json();
+if (!res.ok) {
+throw new Error(data.error || "Unable to generate diet plan.");
+}
+dietResult.innerHTML = `
+<div class="planner-card">
+<h3>${data.diet_goal}</h3>
+<p class="planner-result">${data.plan}</p>
+</div>
+`;
+} catch (error) {
+setToolMessage(dietMessage, error.message, true);
+}
+});
+
+const initialTab = window.location.hash.replace("#", "");
+if (tabMeta[initialTab]) {
+setActiveTab(initialTab);
+}
+
+setTimeout(() => {
+hospitalMap.invalidateSize();
+chatMap.invalidateSize();
+}, 150);
+
+setInterval(maybeSendReminderNotifications, 30000);
+</script>
+</body>
+</html>

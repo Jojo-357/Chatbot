@@ -1,0 +1,4 @@
+.env
+Important/API_KEY.txt
+__pycache__
+node_modules
